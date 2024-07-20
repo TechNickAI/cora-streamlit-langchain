@@ -51,6 +51,8 @@ distro==1.9.0
     #   anthropic
     #   groq
     #   openai
+exa-py==1.0.16
+    # via langchain-exa
 filelock==3.15.4
     # via huggingface-hub
 frozenlist==1.4.1
@@ -109,9 +111,12 @@ langchain-core==0.2.22
     #   langchain
     #   langchain-anthropic
     #   langchain-community
+    #   langchain-exa
     #   langchain-groq
     #   langchain-openai
     #   langchain-text-splitters
+langchain-exa==0.1.0
+    # via -r requirements/requirements.in
 langchain-groq==0.1.6
     # via -r requirements/requirements.in
 langchain-openai==0.1.17
@@ -147,7 +152,9 @@ numpy==1.26.4
     #   pydeck
     #   streamlit
 openai==1.36.0
-    # via langchain-openai
+    # via
+    #   exa-py
+    #   langchain-openai
 orjson==3.10.6
     # via langsmith
 packaging==24.1
@@ -201,6 +208,7 @@ regex==2024.5.15
     # via tiktoken
 requests==2.32.3
     # via
+    #   exa-py
     #   huggingface-hub
     #   langchain
     #   langchain-community
@@ -255,6 +263,7 @@ types-python-dateutil==2.9.0.20240316
 typing-extensions==4.12.2
     # via
     #   anthropic
+    #   exa-py
     #   groq
     #   huggingface-hub
     #   openai

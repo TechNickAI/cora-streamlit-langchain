@@ -1,10 +1,10 @@
+from exa_py import Exa
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.prompts.chat import HumanMessagePromptTemplate, SystemMessagePromptTemplate
-from langchain.tools import Tool
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_core.tools import tool
 from si.lmm import LMM
-import arrow
+import arrow, os
 
 assistant_prompt = """
 You are Cora, an advanced AI assistant designed with a heart-centered
@@ -71,20 +71,33 @@ while maintaining a balance between warmth and professionalism.
 )
 
 
+def get_tools():
+    exa = Exa(api_key=os.getenv("EXA_API_KEY"))
+
+    @tool
+    def search(query: str):
+        """Search for a webpage based on the query."""
+        return exa.search(f"{query}", use_autoprompt=True, num_results=5)
+
+    @tool
+    def find_similar(url: str):
+        """Search for webpages similar to a given URL."""
+        return exa.find_similar(url, num_results=5)
+
+    @tool
+    def get_contents(ids: list[str]):
+        """Get the contents of a webpage."""
+        return exa.get_contents(ids)
+
+    return [search, get_contents, find_similar]
+
+
 def create_chat_agent(assistant_prompt=assistant_prompt):
     # Initialize the language model
     llm = LMM.get_chat_model(LMM.ANTHROPIC)
 
     # Define tools
-    tools = [
-        Tool(
-            name="tavily_search",
-            friendly_name="Web Search",
-            func=TavilySearchResults(max_results=5).run,
-            description="Useful for when you need to search the internet for current information.",
-        ),
-        # Add more tools here as needed
-    ]
+    tools = get_tools()
 
     # Create the prompt template
     prompt = ChatPromptTemplate.from_messages(

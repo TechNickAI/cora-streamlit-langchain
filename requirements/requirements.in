@@ -2,6 +2,7 @@ arrow
 langchain
 langchain-anthropic
 langchain-community
+langchain-exa
 langchain-groq
 langchain-openai
 
