@@ -110,4 +110,10 @@ def create_chat_agent(assistant_prompt=assistant_prompt):
     )
 
     agent = create_tool_calling_agent(llm, tools, prompt)
-    return AgentExecutor(agent=agent, tools=tools, verbose=True)
+    return AgentExecutor(
+        agent=agent,
+        tools=tools,
+        verbose=True,
+        return_intermediate_steps=True,
+        handle_parsing_errors=True,
+    )
