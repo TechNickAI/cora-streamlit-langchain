@@ -13,25 +13,15 @@ ai_logo = "static/logo.png"
 # Keep this in sync with static/index.html
 st.set_page_config(page_title="Cora: Heart-Centered AI", page_icon=ai_logo, layout="wide")
 
-
-@st.cache_data()
-def get_auth():
-    return GoogleAuth()
-
-
-auth = get_auth()
-user_info = auth.get_user_info()
 st.header("Cora 🤖 + 💙", divider="rainbow")
-if user_info:
-    if st.button("Logout"):
-        auth.logout()
-        st.rerun()
 
-else:
-    auth.login_button()
+# ---------------------------------------------------------------------------- #
+#                             Handle authentication
+# ---------------------------------------------------------------------------- #
 
 
 # Handle OAuth callback
+auth = GoogleAuth()
 if "code" in st.query_params:
     logger.debug("OAuth callback detected with code: {}", st.query_params["code"])
     user_info = auth.callback()
@@ -39,10 +29,20 @@ if "code" in st.query_params:
         st.success("Login successful!")
         st.rerun()
 
+user_info = auth.get_user_info()
+if user_info:
+    if st.button("Logout"):
+        auth.logout()
+        st.rerun()
+else:
+    auth.login_button()
 
-# ----------------------------- Helper functions ----------------------------- #
 
-# TODO convert these to redis
+# ---------------------------------------------------------------------------- #
+#                              Handle the request                              #
+# ---------------------------------------------------------------------------- #
+
+# Initialize session state
 if "chat_history" not in st.session_state:
     logger.debug("Initializing chat_history in session state")
     st.session_state.chat_history = []
@@ -50,11 +50,6 @@ if "thread_id" not in st.session_state:
     logger.debug("Initializing thread_id in session state")
     st.session_state.thread_id = str(uuid.uuid4())
 
-# ---------------------------------------------------------------------------- #
-#                              Handle the request                              #
-# ---------------------------------------------------------------------------- #
-
-# Initialize session state
 if "messages" not in st.session_state:
     logger.debug("Initializing messages in session state")
     st.session_state.messages = []
@@ -69,10 +64,6 @@ else:
     logger.debug("No chat messages found, displaying default message")
     with st.chat_message("AI", avatar=ai_logo):
         st.write("Ohai!")
-
-# Create the chat agent
-logger.debug("Creating chat agent")
-
 
 # Get user input
 user_request = st.chat_input("How may I assist you today?")

@@ -86,7 +86,7 @@ class GoogleAuth:
     def logout(self):
         logger.debug("Logging out user")
         self.local_storage.deleteItem(self.storage_key)
-        st.session_state["user_info"] = None
+        del st.session_state["user_info"]
 
     def set_auth_storage(self, user_info):
         logger.debug(f"Setting authentication storage for user: {user_info}")
