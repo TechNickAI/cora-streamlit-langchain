@@ -1,7 +1,5 @@
 arrow
-extra-streamlit-components
 google-api-python-client
-google-auth-httplib2
 google-auth-oauthlib
 langchain
 langchain-anthropic
@@ -9,4 +7,6 @@ langchain-community
 langchain-exa
 langchain-groq
 langchain-openai
+loguru
 streamlit
+streamlit_local_storage

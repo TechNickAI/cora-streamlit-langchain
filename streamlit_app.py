@@ -1,9 +1,9 @@
+from components.auth import GoogleAuth
 from langchain_core.runnables import RunnableConfig
+from loguru import logger
 from si.agents import create_chat_agent
 import streamlit as st
 import uuid
-from auth import login, callback, logout, get_user_info
-from loguru import logger
 
 # ---------------------------------------------------------------------------- #
 #                             Streamlit page set up                            #
@@ -13,16 +13,19 @@ ai_logo = "static/logo.png"
 # Keep this in sync with static/index.html
 st.set_page_config(page_title="Cora: Heart-Centered AI", page_icon=ai_logo, layout="wide")
 
-user_info = get_user_info()
+auth = GoogleAuth()
+user_info = auth.get_user_info()
 if user_info:
     st.markdown(
         f'<img src="{user_info["picture"]}" alt="{user_info["name"]} ({user_info["email"]})" class="user-avatar">',
         unsafe_allow_html=True,
     )
     if st.button("Logout"):
-        logout()
-elif st.button("Login"):
-    login()
+        auth.logout()
+        st.rerun()
+
+else:
+    auth.login_button()
 
 st.header("Cora 🤖 + 💙", divider="rainbow")
 
@@ -30,9 +33,10 @@ st.header("Cora 🤖 + 💙", divider="rainbow")
 # Handle OAuth callback
 if "code" in st.query_params:
     logger.debug("OAuth callback detected with code: {}", st.query_params["code"])
-    user_info = callback()
+    user_info = auth.callback()
     if user_info:
         st.success("Login successful!")
+        st.rerun()
 
 
 # ----------------------------- Helper functions ----------------------------- #
