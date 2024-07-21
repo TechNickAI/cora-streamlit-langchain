@@ -286,3 +286,10 @@ gatherUsageStats = false
 # Font family for all text in the app, except code blocks. One of "sans serif",
 # "serif", or "monospace".
 # font =
+
+
+backgroundColor = "#f0f0f5"
+font = "sans serif"
+primaryColor = "#6eb52f"
+secondaryBackgroundColor = "#e0e0ef"
+textColor = "#262730"
