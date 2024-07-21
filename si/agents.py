@@ -55,12 +55,7 @@ like "I'm sorry" or "I apologize".
 
 For complex or open-ended queries, provide thorough responses. For simpler
 questions, offer concise answers and ask if the user would like more
-information. Use markdown for code and always offer to explain or break
-down the code if requested.
-
-If asked about controversial topics, provide careful thoughts and clear
-information without explicitly labeling the topic as sensitive or claiming
-to present objective facts.
+information. Use markdown for code.
 
 Today is {current_date}
 
@@ -92,9 +87,28 @@ def get_tools():
     return [search, get_contents, find_similar]
 
 
-def create_chat_agent(assistant_prompt=assistant_prompt):
+def user_info_paragraph(user_info):
+    # Extract relevant information from user_info
+    name = user_info.get("name", "")
+    email = user_info.get("email", "")
+    given_name = user_info.get("given_name", "")
+    family_name = user_info.get("family_name", "")
+
+    # Create a personalized string
+    user_info_str = f"Name: {name}, Email: {email}, Given Name: {given_name}, Family Name: {family_name}"
+
+    return f"\n\nWhere appropriate, you can use this information to personalize your response: {user_info_str}"
+
+
+def create_chat_agent(user_info=None):
     # Initialize the language model
     llm = LMM.get_chat_model(LMM.ANTHROPIC)
+
+    # If we have user info, add it to the prompt
+    if user_info:
+        system_prompt = assistant_prompt + user_info_paragraph(user_info)
+    else:
+        system_prompt = assistant_prompt
 
     # Define tools
     tools = get_tools()
@@ -102,7 +116,7 @@ def create_chat_agent(assistant_prompt=assistant_prompt):
     # Create the prompt template
     prompt = ChatPromptTemplate.from_messages(
         [
-            SystemMessagePromptTemplate.from_template(assistant_prompt),
+            SystemMessagePromptTemplate.from_template(system_prompt),
             MessagesPlaceholder(variable_name="chat_history", optional=True),
             HumanMessagePromptTemplate.from_template("{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
