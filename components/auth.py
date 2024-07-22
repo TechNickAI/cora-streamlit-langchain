@@ -44,9 +44,13 @@ class GoogleAuth:
             state=state,
         )
 
-    def login_button(self):
+    def create_authorization_url(self):
         flow = self.create_flow()
         authorization_url, _ = flow.authorization_url(include_granted_scopes="true", access_type="offline")
+        return authorization_url
+
+    def login_button(self):
+        authorization_url = self.create_authorization_url()
         st.link_button(
             label="Login with Google",
             url=authorization_url,

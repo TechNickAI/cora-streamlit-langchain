@@ -3,6 +3,7 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.prompts.chat import HumanMessagePromptTemplate, SystemMessagePromptTemplate
 from langchain_core.tools import tool
+from loguru import logger
 from si.lmm import LMM
 import arrow, os
 
@@ -109,6 +110,7 @@ def create_chat_agent(user_info=None):
         system_prompt = assistant_prompt + user_info_paragraph(user_info)
     else:
         system_prompt = assistant_prompt
+    logger.trace("System prompt: {system_prompt}")
 
     # Define tools
     tools = get_tools()
