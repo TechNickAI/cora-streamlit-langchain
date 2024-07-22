@@ -2,6 +2,10 @@ from components.auth import GoogleAuth
 from langchain_core.runnables import RunnableConfig
 from loguru import logger
 from si.agents import create_chat_agent
+from zep_cloud.client import AsyncZep
+from zep_cloud.errors import NotFoundError
+import asyncio
+import os
 import streamlit as st
 import uuid
 
@@ -12,47 +16,77 @@ import uuid
 ai_logo = "static/logo.png"
 # Keep this in sync with static/index.html
 st.set_page_config(page_title="Cora: Heart-Centered AI", page_icon=ai_logo, layout="wide")
-
 st.header("Cora 🤖 + 💙", divider="rainbow")
+
+# Initialize Zep client
+zep_api_key = os.getenv("ZEP_API_KEY")
+assert zep_api_key, "ZEP_API_KEY environment variable is required."
+zep_client = AsyncZep(api_key=zep_api_key)
+
+# Initialize session state
+if "chat_history" not in st.session_state:
+    logger.debug("Initializing chat_history in session state")
+    st.session_state.chat_history = []
+if "messages" not in st.session_state:
+    logger.debug("Initializing messages in session state")
+    st.session_state.messages = []
 
 # ---------------------------------------------------------------------------- #
 #                             Handle authentication
 # ---------------------------------------------------------------------------- #
 
 
-# Handle OAuth callback
-auth = GoogleAuth()
-if "code" in st.query_params:
-    logger.debug("OAuth callback detected with code: {}", st.query_params["code"])
-    user_info = auth.callback()
+async def setup_user():
+    auth = GoogleAuth()
+    user_info = None
+    if "code" in st.query_params:
+        logger.debug("OAuth callback detected with code: {}", st.query_params["code"])
+        user_info = await auth.callback()
+        if user_info:
+            st.success("Login successful!")
+            st.rerun()
+
+    user_info = auth.get_user_info()
     if user_info:
-        st.success("Login successful!")
-        st.rerun()
+        if st.button("Logout"):
+            auth.logout()
+            st.rerun()
+    else:
+        auth.login_button()
 
-user_info = auth.get_user_info()
-if user_info:
-    if st.button("Logout"):
-        auth.logout()
-        st.rerun()
-else:
-    auth.login_button()
+    if user_info:
+        # Assert ZEP_API_KEY is set
 
+        # Determine environment
+
+        # Modify email for dev mode
+        if os.getenv("APP_ENVIRONMENT", "dev") == "dev":
+            user_info["email"] = user_info["email"].replace("@", "+devtest@")
+
+        # Check if user exists in Zep
+        try:
+            zep_user = await zep_client.user.get(user_info["email"])
+        except NotFoundError:
+            logger.debug("User not found in Zep, creating new user")
+            # Create user in Zep
+            zep_user = await zep_client.user.add(
+                user_id=user_info["email"],
+                email=user_info["email"],
+                first_name=user_info["given_name"],
+                last_name=user_info["family_name"],
+                metadata={"picture": user_info["picture"]},
+            )
+            user_info["zep_user_id"] = zep_user.id
+            logger.debug("Created new user in Zep: {}", zep_user)
+
+    return user_info
+
+
+user_info = asyncio.run(setup_user())
 
 # ---------------------------------------------------------------------------- #
 #                              Handle the request                              #
 # ---------------------------------------------------------------------------- #
-
-# Initialize session state
-if "chat_history" not in st.session_state:
-    logger.debug("Initializing chat_history in session state")
-    st.session_state.chat_history = []
-if "thread_id" not in st.session_state:
-    logger.debug("Initializing thread_id in session state")
-    st.session_state.thread_id = str(uuid.uuid4())
-
-if "messages" not in st.session_state:
-    logger.debug("Initializing messages in session state")
-    st.session_state.messages = []
 
 # Display chat messages
 if st.session_state.messages:
@@ -70,6 +104,14 @@ user_request = st.chat_input("How may I assist you today?")
 
 if user_request:
     logger.debug("User input received: {}", user_request)
+
+    # Set up session
+    if "thread_id" not in st.session_state:
+        st.session_state.thread_id = str(uuid.uuid4())
+        zep_client.memory.add_session(
+            session_id=st.session_state.thread_id,
+            user_id=user_info["email"],
+        )
 
     agent_executor = create_chat_agent()
     runnable_config = RunnableConfig(configurable={"thread_id": st.session_state.thread_id})

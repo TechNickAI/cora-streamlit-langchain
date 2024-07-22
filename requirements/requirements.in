@@ -10,3 +10,4 @@ langchain-openai
 loguru
 streamlit
 streamlit_local_storage
+zep_cloud
