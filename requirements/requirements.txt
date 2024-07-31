@@ -83,6 +83,8 @@ google-auth-oauthlib==1.2.1
     # via -r requirements/requirements.in
 googleapis-common-protos==1.63.2
     # via google-api-core
+greenlet==3.0.3
+    # via sqlalchemy
 groq==0.9.0
     # via langchain-groq
 h11==0.14.0
@@ -333,7 +335,9 @@ uritemplate==4.1.1
     # via google-api-python-client
 urllib3==2.2.2
     # via requests
+watchdog==4.0.1
+    # via streamlit
 yarl==1.9.4
     # via aiohttp
-zep-cloud==1.0.7
+zep-cloud==1.0.9
     # via -r requirements/requirements.in
